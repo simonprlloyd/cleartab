@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ClearTab — AI That Fights Your Bills For You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Epilogue:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F9F4;--bg2:#EFF3EA;--bg3:#E5EBE0;--bg4:#D8E0D2;
+  --ink:#0F1A0C;--ink2:#1E2E1A;--ink3:#2E4028;
+  --green:#1A6B3A;--green2:#22893F;--green3:#2AAD4E;--green-l:#E8F5EC;
+  --lime:#8CBF3A;--lime2:#A8D44E;
+  --red:#C0392B;--red-l:#FDECEA;
+  --amber:#D4870A;--amber-l:#FDF3E3;
+  --muted:rgba(15,26,12,.5);--dim:rgba(15,26,12,.3);--dimmer:rgba(15,26,12,.15);
+  --serif:"Instrument Serif",Georgia,serif;
+  --sans:"Epilogue",system-ui,sans-serif;
+  --mono:"JetBrains Mono",monospace;
+  --shadow:0 1px 3px rgba(15,26,12,.06),0 4px 16px rgba(15,26,12,.08);
+  --shadow-lg:0 4px 6px rgba(15,26,12,.05),0 10px 40px rgba(15,26,12,.12);
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);overflow-x:hidden;-webkit-font-smoothing:antialiased;cursor:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:var(--green);border-radius:2px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes shimmer{0%{left:-100%}100%{left:200%}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes countUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scanLine{0%{top:0}100%{top:100%}}
+@keyframes moneyFloat{0%{opacity:0;transform:translateY(20px) scale(.8)}20%{opacity:1}80%{opacity:1}100%{opacity:0;transform:translateY(-80px) scale(1.1)}}
+@keyframes slideRight{from{width:0}to{width:var(--w)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(26,107,58,.2)}50%{box-shadow:0 0 0 8px rgba(26,107,58,0)}}
+@keyframes typewriter{from{width:0}to{width:100%}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* CURSOR */
+#cur{position:fixed;width:10px;height:10px;background:var(--green);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s,background .2s}
+#curR{position:fixed;width:32px;height:32px;border:1.5px solid rgba(26,107,58,.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%)}
+#cur.big{width:44px;height:44px;background:rgba(26,107,58,.1)}
+#curR.big{width:60px;height:60px;border-color:var(--green)}
+#prog{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--green),var(--lime));z-index:9997;width:0%}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1rem 2.5rem;background:rgba(247,249,244,.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--dimmer)}
+.nav-logo{display:flex;align-items:center;gap:.6rem;cursor:pointer}
+.nav-logo-mark{width:28px;height:28px;background:var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-size:.72rem;font-weight:800;color:#fff;letter-spacing:-.02em}
+.nav-logo-text{font-family:var(--serif);font-size:1.3rem;font-style:italic;color:var(--ink)}
+.nav-logo-text span{color:var(--green)}
+.nav-tabs{display:flex;gap:.2rem;padding:.2rem;background:var(--bg2);border:1px solid var(--dimmer);border-radius:8px}
+.ntab{padding:.38rem 1rem;border-radius:6px;font-family:var(--sans);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted);background:transparent;border:none}
+.ntab.on{background:#fff;color:var(--green);box-shadow:0 1px 3px rgba(15,26,12,.1)}
+.ntab:hover:not(.on){color:var(--ink)}
+.nav-right{display:flex;align-items:center;gap:.85rem}
+.nav-tag{display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.6rem;color:var(--green);letter-spacing:.08em;padding:.3rem .75rem;background:var(--green-l);border:1px solid rgba(26,107,58,.2);border-radius:20px}
+.nav-tag-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
+.nav-cta{padding:.45rem 1.2rem;background:var(--green);color:#fff;border:none;font-family:var(--sans);font-size:.75rem;font-weight:700;cursor:pointer;border-radius:6px;transition:all .25s}
+.nav-cta:hover{background:var(--green2);transform:translateY(-1px);box-shadow:0 4px 15px rgba(26,107,58,.3)}
+
+/* VIEWS */
+.view{display:none;min-height:100vh}
+.view.on{display:block;animation:fadeIn .3s ease}
+
+/* ═══════════════════════
+   LANDING
+═══════════════════════ */
+.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;padding:7rem 2.5rem 4rem;position:relative;overflow:hidden;max-width:1300px;margin:0 auto}
+.hero-bg-pattern{position:fixed;inset:0;background-image:radial-gradient(circle,rgba(26,107,58,.06) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;z-index:0}
+.hero-left{position:relative;z-index:2}
+.hero-tag{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .9rem;background:var(--green-l);border:1px solid rgba(26,107,58,.2);border-radius:20px;font-family:var(--mono);font-size:.62rem;color:var(--green);letter-spacing:.1em;margin-bottom:1.5rem;animation:fadeUp .5s .1s both}
+.hero h1{font-family:var(--serif);font-size:clamp(3rem,5.5vw,5.5rem);font-style:italic;line-height:1;letter-spacing:-.02em;margin-bottom:1.25rem;animation:fadeUp .6s .2s both;color:var(--ink)}
+.hero h1 .green{color:var(--green)}
+.hero h1 .block{display:block}
+.hero-sub{font-size:1.05rem;color:var(--muted);font-weight:300;max-width:480px;line-height:1.75;margin-bottom:2rem;animation:fadeUp .6s .35s both}
+.hero-btns{display:flex;gap:.85rem;flex-wrap:wrap;margin-bottom:2.5rem;animation:fadeUp .6s .5s both}
+.btn-prim{padding:.9rem 2rem;background:var(--green);color:#fff;border:none;font-family:var(--sans);font-size:.82rem;font-weight:700;cursor:pointer;border-radius:6px;transition:all .3s;display:flex;align-items:center;gap:.5rem}
+.btn-prim:hover{background:var(--green2);transform:translateY(-2px);box-shadow:0 8px 25px rgba(26,107,58,.3)}
+.btn-sec{padding:.9rem 2rem;border:1.5px solid var(--dimmer);color:var(--ink);background:transparent;font-family:var(--sans);font-size:.82rem;font-weight:500;cursor:pointer;border-radius:6px;transition:all .3s}
+.btn-sec:hover{border-color:var(--green);color:var(--green)}
+.hero-trust{display:flex;gap:1.5rem;flex-wrap:wrap;animation:fadeUp .6s .65s both}
+.ht-item{display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:var(--muted)}
+.ht-check{color:var(--green);font-size:.8rem}
+
+/* HERO RIGHT — BILL PREVIEW */
+.hero-right{position:relative;z-index:2;animation:fadeUp .8s .3s both}
+.bill-preview{background:#fff;border-radius:16px;box-shadow:var(--shadow-lg);overflow:hidden;position:relative}
+.bp-top{background:linear-gradient(135deg,var(--ink) 0%,var(--ink2) 100%);padding:1.5rem;color:#fff}
+.bp-company{font-family:var(--sans);font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.6;margin-bottom:.3rem}
+.bp-title{font-family:var(--serif);font-size:1.4rem;font-style:italic;margin-bottom:.2rem}
+.bp-period{font-family:var(--mono);font-size:.62rem;opacity:.5;letter-spacing:.08em}
+.bp-scan{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(42,173,78,.8),transparent);animation:scanLine 2s ease-in-out infinite}
+.bp-items{padding:1.25rem;display:flex;flex-direction:column;gap:.5rem}
+.bp-item{display:flex;justify-content:space-between;align-items:center;padding:.6rem .85rem;border-radius:6px;font-size:.82rem;transition:all .3s}
+.bp-item.flagged{background:var(--red-l);border:1px solid rgba(192,57,43,.15);animation:fadeIn .4s ease}
+.bp-item.ok{background:var(--bg);border:1px solid var(--dimmer)}
+.bp-item-name{color:var(--ink);font-weight:500}
+.bp-item-name .flag{font-size:.62rem;color:var(--red);font-family:var(--mono);font-weight:700;letter-spacing:.08em;margin-left:.5rem;padding:.1rem .35rem;background:rgba(192,57,43,.1);border-radius:3px}
+.bp-item-amount{font-family:var(--mono);font-weight:600}
+.bp-item.flagged .bp-item-amount{color:var(--red)}
+.bp-item.ok .bp-item-amount{color:var(--muted)}
+.bp-result{padding:1rem 1.25rem;background:var(--green-l);border-top:1px solid rgba(26,107,58,.15);display:flex;align-items:center;justify-content:space-between}
+.bp-result-label{font-size:.78rem;color:var(--green);font-weight:600}
+.bp-result-amount{font-family:var(--serif);font-size:1.8rem;font-style:italic;color:var(--green);font-weight:400}
+.bp-ai-badge{display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.58rem;color:var(--muted);padding:.25rem .6rem;background:var(--bg2);border-radius:3px}
+
+/* MONEY FLOATERS */
+.money-float{position:absolute;font-size:1.2rem;pointer-events:none;animation:moneyFloat 3s ease-out forwards;z-index:10}
+
+/* STATS */
+.stats-strip{background:#fff;border-top:1px solid var(--dimmer);border-bottom:1px solid var(--dimmer);padding:2rem 2.5rem;display:grid;grid-template-columns:repeat(4,1fr);position:relative;overflow:hidden}
+.stats-strip::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,var(--bg),transparent,var(--bg));pointer-events:none}
+.stat-item{text-align:center;padding:0 1.5rem;border-right:1px solid var(--dimmer)}
+.stat-item:last-child{border-right:none}
+.stat-n{font-family:var(--serif);font-size:2.8rem;font-style:italic;color:var(--green);line-height:1;display:block}
+.stat-l{font-size:.7rem;color:var(--muted);margin-top:.3rem;font-weight:300;display:block}
+
+/* SECTIONS */
+.sec{padding:6rem 2.5rem;max-width:1200px;margin:0 auto}
+.sec-full{padding:6rem 2.5rem;background:#fff;border-top:1px solid var(--dimmer)}
+.eyebrow{font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--green);margin-bottom:.6rem;display:flex;align-items:center;gap:.6rem}
+.eyebrow-line{display:block;width:1.5rem;height:1.5px;background:var(--green)}
+.sec-h{font-family:var(--serif);font-size:clamp(2rem,4vw,3.2rem);font-style:italic;line-height:1.05;letter-spacing:-.02em;margin-bottom:1rem;color:var(--ink)}
+.sec-h .green{color:var(--green)}
+.sec-p{font-size:.95rem;color:var(--muted);max-width:520px;line-height:1.8;font-weight:300;margin-bottom:3rem}
+
+/* HOW IT WORKS */
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.how-card{background:#fff;border:1px solid var(--dimmer);border-radius:12px;padding:2rem;transition:all .4s;cursor:default;position:relative;overflow:hidden}
+.how-card:hover{border-color:rgba(26,107,58,.3);transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.how-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),var(--lime));transform:scaleX(0);transform-origin:left;transition:transform .4s}
+.how-card:hover::before{transform:scaleX(1)}
+.how-num{font-family:var(--serif);font-size:4rem;font-style:italic;color:rgba(26,107,58,.08);line-height:1;margin-bottom:.75rem}
+.how-icon{font-size:1.75rem;margin-bottom:.85rem;display:block}
+.how-title{font-family:var(--sans);font-size:1rem;font-weight:700;margin-bottom:.5rem;color:var(--ink)}
+.how-desc{font-size:.82rem;color:var(--muted);line-height:1.7;font-weight:300}
+
+/* BILLS COVERED */
+.bills-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.bill-chip{background:#fff;border:1px solid var(--dimmer);border-radius:10px;padding:1.25rem;text-align:center;transition:all .3s;cursor:default}
+.bill-chip:hover{border-color:rgba(26,107,58,.3);background:var(--green-l);transform:translateY(-2px)}
+.bc-icon{font-size:1.8rem;margin-bottom:.6rem;display:block}
+.bc-name{font-size:.82rem;font-weight:600;color:var(--ink);margin-bottom:.2rem}
+.bc-avg{font-family:var(--mono);font-size:.65rem;color:var(--green);letter-spacing:.06em}
+
+/* PRICING */
+.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;max-width:700px;margin:0 auto}
+.price-card{background:#fff;border:1px solid var(--dimmer);border-radius:14px;padding:2.5rem;position:relative;overflow:hidden;transition:all .3s}
+.price-card.feat{border-color:rgba(26,107,58,.35);background:var(--green-l)}
+.price-card.feat::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),var(--lime))}
+.pc-badge{position:absolute;top:1.25rem;right:1.25rem;background:var(--green);color:#fff;font-family:var(--mono);font-size:.58rem;font-weight:600;letter-spacing:.1em;padding:.2rem .55rem;border-radius:4px}
+.pc-plan{font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--green);margin-bottom:.75rem}
+.pc-amt{font-family:var(--serif);font-size:3rem;font-style:italic;line-height:1;margin-bottom:.25rem;color:var(--ink)}
+.pc-period{font-family:var(--mono);font-size:.65rem;color:var(--muted);margin-bottom:1.5rem}
+.pc-features{display:flex;flex-direction:column;gap:.55rem;margin-bottom:2rem}
+.pcf{display:flex;align-items:flex-start;gap:.55rem;font-size:.82rem;color:var(--muted)}
+.pcf-check{color:var(--green);flex-shrink:0;margin-top:1px}
+.pc-btn{width:100%;padding:.85rem;border:1.5px solid var(--green);color:var(--green);background:transparent;font-family:var(--sans);font-size:.82rem;font-weight:700;cursor:pointer;border-radius:6px;transition:all .3s}
+.price-card.feat .pc-btn{background:var(--green);color:#fff;border-color:var(--green)}
+.pc-btn:hover{background:var(--green);color:#fff}
+
+/* ═══════════════════════
+   SCAN VIEW (AI-powered)
+═══════════════════════ */
+#view-scan{padding:5.5rem 2.5rem 3rem;background:var(--bg)}
+.scan-wrap{max-width:800px;margin:0 auto}
+.scan-hd{text-align:center;margin-bottom:3rem}
+.scan-h{font-family:var(--serif);font-size:2.8rem;font-style:italic;color:var(--ink);margin-bottom:.6rem}
+.scan-sub{font-size:.95rem;color:var(--muted);font-weight:300;line-height:1.7}
+
+/* BILL TYPE SELECTOR */
+.bill-types{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:2rem}
+.bt{background:#fff;border:1.5px solid var(--dimmer);border-radius:10px;padding:1.1rem;text-align:center;cursor:pointer;transition:all .25s}
+.bt:hover,.bt.sel{border-color:var(--green);background:var(--green-l)}
+.bt.sel{box-shadow:0 0 0 3px rgba(26,107,58,.12)}
+.bt-icon{font-size:1.5rem;display:block;margin-bottom:.4rem}
+.bt-name{font-size:.75rem;font-weight:600;color:var(--ink)}
+.bt-avg{font-family:var(--mono);font-size:.62rem;color:var(--green);margin-top:.15rem}
+
+/* TEXT INPUT AREA */
+.bill-input-wrap{background:#fff;border:1.5px solid var(--dimmer);border-radius:12px;overflow:hidden;margin-bottom:1.5rem;transition:border-color .3s}
+.bill-input-wrap:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(26,107,58,.08)}
+.bill-input-header{padding:.85rem 1.25rem;border-bottom:1px solid var(--dimmer);display:flex;align-items:center;justify-content:space-between;background:var(--bg2)}
+.bih-label{font-family:var(--mono);font-size:.62rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.bih-examples{display:flex;gap:.4rem}
+.bih-ex{padding:.18rem .55rem;background:#fff;border:1px solid var(--dimmer);border-radius:3px;font-family:var(--mono);font-size:.58rem;color:var(--muted);cursor:pointer;transition:all .2s}
+.bih-ex:hover{border-color:var(--green);color:var(--green)}
+#billText{width:100%;padding:1.25rem;border:none;outline:none;font-family:var(--mono);font-size:.82rem;color:var(--ink);background:#fff;resize:vertical;min-height:180px;line-height:1.65}
+#billText::placeholder{color:var(--dimmer)}
+
+/* SCAN BUTTON */
+.scan-btn{width:100%;padding:1.1rem;background:var(--green);color:#fff;border:none;font-family:var(--sans);font-size:.9rem;font-weight:700;cursor:pointer;border-radius:8px;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:.65rem;position:relative;overflow:hidden}
+.scan-btn::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);animation:shimmer 3s ease-in-out infinite}
+.scan-btn:hover{background:var(--green2);transform:translateY(-2px);box-shadow:0 8px 25px rgba(26,107,58,.3)}
+.scan-btn:disabled{background:var(--bg3);color:var(--muted);cursor:not-allowed;transform:none;box-shadow:none}
+.scan-btn .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.scan-btn.loading .btn-icon{display:none}
+.scan-btn.loading .spinner{display:block}
+
+/* RESULTS */
+#scanResults{display:none;margin-top:2rem;animation:fadeUp .5s ease}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem}
+.results-title{font-family:var(--serif);font-size:1.8rem;font-style:italic;color:var(--ink)}
+.savings-badge{display:flex;align-items:center;gap:.5rem;padding:.5rem 1.1rem;background:var(--green-l);border:1px solid rgba(26,107,58,.2);border-radius:8px}
+.sb-label{font-size:.72rem;color:var(--muted)}
+.sb-amount{font-family:var(--serif);font-size:1.5rem;font-style:italic;color:var(--green)}
+.issues-list{display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.5rem}
+.issue-card{background:#fff;border:1px solid var(--dimmer);border-radius:10px;padding:1.25rem;transition:all .3s;cursor:default;position:relative;overflow:hidden}
+.issue-card:hover{border-color:rgba(26,107,58,.3);box-shadow:var(--shadow)}
+.issue-card::before{content:"";position:absolute;top:0;left:0;bottom:0;width:3px}
+.issue-card.high::before{background:var(--red)}
+.issue-card.med::before{background:var(--amber)}
+.issue-card.low::before{background:var(--lime)}
+.ic-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.5rem}
+.ic-badge{font-family:var(--mono);font-size:.58rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:.18rem .55rem;border-radius:3px}
+.ib-high{background:var(--red-l);color:var(--red)}
+.ib-med{background:var(--amber-l);color:var(--amber)}
+.ib-low{background:var(--green-l);color:var(--green)}
+.ic-title{font-weight:700;font-size:.9rem;color:var(--ink);flex:1}
+.ic-save{font-family:var(--serif);font-size:1.3rem;font-style:italic;color:var(--green);white-space:nowrap}
+.ic-desc{font-size:.8rem;color:var(--muted);line-height:1.65;margin-bottom:.75rem}
+.ic-script-btn{padding:.45rem 1rem;background:var(--green-l);border:1px solid rgba(26,107,58,.2);color:var(--green);font-family:var(--sans);font-size:.72rem;font-weight:600;cursor:pointer;border-radius:5px;transition:all .25s}
+.ic-script-btn:hover{background:var(--green);color:#fff}
+
+/* SCRIPT MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,26,12,.4);backdrop-filter:blur(8px);z-index:500;display:none;align-items:center;justify-content:center;padding:1.5rem}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 80px rgba(15,26,12,.2)}
+.modal-header{padding:1.5rem;border-bottom:1px solid var(--dimmer);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1}
+.modal-title{font-family:var(--serif);font-size:1.4rem;font-style:italic;color:var(--ink)}
+.modal-close{width:30px;height:30px;border-radius:50%;background:var(--bg2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--muted);transition:all .2s}
+.modal-close:hover{background:var(--bg3)}
+.modal-body{padding:1.5rem}
+.script-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.65rem}
+.script-box{background:var(--bg2);border:1px solid var(--dimmer);border-radius:8px;padding:1.25rem;font-size:.85rem;color:var(--ink);line-height:1.75;font-family:var(--sans);position:relative;overflow:hidden}
+.script-box .highlight{background:rgba(26,107,58,.12);color:var(--green);font-weight:600;padding:.1rem .25rem;border-radius:3px}
+.script-cursor{display:inline-block;width:2px;height:1em;background:var(--green);vertical-align:middle;animation:blink 1s step-end infinite;margin-left:1px}
+.script-tips{margin-top:1.25rem;display:flex;flex-direction:column;gap:.5rem}
+.tip{display:flex;align-items:flex-start;gap:.6rem;padding:.65rem .85rem;background:var(--green-l);border-radius:6px;font-size:.78rem;color:var(--ink)}
+.tip-icon{flex-shrink:0;font-size:.9rem}
+.script-actions{display:flex;gap:.75rem;margin-top:1.5rem}
+.sa-copy{flex:1;padding:.8rem;background:var(--green);color:#fff;border:none;font-family:var(--sans);font-size:.82rem;font-weight:700;cursor:pointer;border-radius:6px;transition:all .3s}
+.sa-copy:hover{background:var(--green2)}
+.sa-close{padding:.8rem 1.5rem;background:transparent;border:1.5px solid var(--dimmer);color:var(--muted);font-family:var(--sans);font-size:.82rem;cursor:pointer;border-radius:6px;transition:all .2s}
+.sa-close:hover{border-color:var(--ink);color:var(--ink)}
+
+/* MOBILE */
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr;gap:2.5rem;padding:6rem 1.5rem 3rem}
+  .stats-strip{grid-template-columns:1fr 1fr}
+  nav{padding:.85rem 1.25rem}
+  .ntab span{display:none}
+  .how-grid,.bills-grid{grid-template-columns:1fr 1fr}
+  .price-grid{grid-template-columns:1fr}
+  #view-scan{padding:5rem 1.25rem 3rem}
+  .bill-types{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .hero h1{font-size:3rem}
+  .how-grid,.bills-grid{grid-template-columns:1fr}
+  .hero-btns{flex-direction:column}
+}
+
+/* ── LANGUAGE TOGGLE ── */
+.lang-toggle{display:flex;align-items:center;gap:.3rem;background:var(--bg2);border:1px solid var(--dimmer);border-radius:20px;padding:.2rem;margin-right:.5rem}
+.lang-btn{padding:.28rem .7rem;border-radius:16px;font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.06em;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s}
+.lang-btn.on{background:#fff;color:var(--green);box-shadow:0 1px 3px rgba(15,26,12,.1)}
+
+</style>
+</head>
+<body>
+<div id="cur"></div><div id="curR"></div>
+<div id="prog"></div>
+<div class="hero-bg-pattern"></div>
+<div class="modal-overlay" id="scriptModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Your Negotiation Script</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="showV('landing')">
+    <div class="nav-logo-mark">CT</div>
+    <div class="nav-logo-text">Clear<span>Tab</span></div>
+  </div>
+  <div class="nav-tabs">
+    <button class="ntab on" onclick="showV('landing')">Home</button>
+    <button class="ntab" onclick="showV('scan')">🔍 <span>Scan My Bill</span></button>
+  </div>
+  <div class="nav-right">
+    <div class="lang-toggle">
+      <button class="lang-btn on" id="langEN" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" id="langES" onclick="setLang('es')">ES</button>
+    </div>
+    <div class="nav-tag"><div class="nav-tag-dot"></div>FREE TO START</div>
+    <button class="nav-cta" onclick="showV('scan')">Scan a Bill Free</button>
+  </div>
+</nav>
+
+<!-- ════════════════
+     LANDING
+════════════════ -->
+<div class="view on" id="view-landing">
+  <div class="hero">
+    <!-- LEFT -->
+    <div class="hero-left">
+      <div class="hero-tag">💰 AI-Powered Bill Fighter</div>
+      <h1>
+        <span class="block">Your bills are</span>
+        <span class="block"><em class="green">overcharging</em></span>
+        <span class="block">you. We fix that.</span>
+      </h1>
+      <p class="hero-sub">ClearTab scans any bill, finds every overcharge and hidden fee, then gives you the exact word-for-word script to call and get your money back. Free unless we save you money.</p>
+      <div class="hero-btns">
+        <button class="btn-prim" onclick="showV('scan')">🔍 Scan My Bill — It's Free</button>
+        <button class="btn-sec" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See How It Works</button>
+      </div>
+      <div class="hero-trust">
+        <div class="ht-item"><span class="ht-check">✓</span>Free to scan</div>
+        <div class="ht-item"><span class="ht-check">✓</span>We take 25% of savings only</div>
+        <div class="ht-item"><span class="ht-check">✓</span>No savings = no charge</div>
+        <div class="ht-item"><span class="ht-check">✓</span>Works on any bill</div>
+      </div>
+    </div>
+    <!-- RIGHT — ANIMATED BILL -->
+    <div class="hero-right" id="heroBill">
+      <div class="bill-preview" style="position:relative">
+        <div class="bp-top">
+          <div class="bp-company">Xfinity / Comcast</div>
+          <div class="bp-title">Monthly Statement</div>
+          <div class="bp-period">April 2026 — Account #4821-7734</div>
+          <div class="bp-scan"></div>
+        </div>
+        <div class="bp-items">
+          <div class="bp-item ok"><span class="bp-item-name">Internet 400Mbps</span><span class="bp-item-amount">$49.99</span></div>
+          <div class="bp-item flagged"><span class="bp-item-name">Regional Sports Fee <span class="flag">⚑ HIDDEN FEE</span></span><span class="bp-item-amount">$14.35</span></div>
+          <div class="bp-item flagged"><span class="bp-item-name">Broadcast TV Surcharge <span class="flag">⚑ NEGOTIABLE</span></span><span class="bp-item-amount">$22.00</span></div>
+          <div class="bp-item flagged"><span class="bp-item-name">Equipment Rental Fee <span class="flag">⚑ OVERCHARGE</span></span><span class="bp-item-amount">$15.00</span></div>
+          <div class="bp-item ok"><span class="bp-item-name">Service Protection Plan</span><span class="bp-item-amount">$7.95</span></div>
+          <div class="bp-item flagged"><span class="bp-item-name">Admin/Processing Fee <span class="flag">⚑ JUNK FEE</span></span><span class="bp-item-amount">$8.50</span></div>
+        </div>
+        <div class="bp-result">
+          <div>
+            <div class="bp-result-label">ClearTab found you could save</div>
+            <div class="bp-ai-badge" style="margin-top:.3rem"><span>🤖</span>AI Analysis Complete · 4 issues found</div>
+          </div>
+          <div class="bp-result-amount" id="heroSavings">$0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-strip">
+    <div class="stat-item reveal"><span class="stat-n" id="s1">$0</span><span class="stat-l">Average annual savings per customer</span></div>
+    <div class="stat-item reveal"><span class="stat-n">80%</span><span class="stat-l">Of medical bills contain errors</span></div>
+    <div class="stat-item reveal"><span class="stat-n">$165B</span><span class="stat-l">Lost to "annoyance fees" per year in the US</span></div>
+    <div class="stat-item reveal"><span class="stat-n">2 min</span><span class="stat-l">Average time to scan and get your script</span></div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="sec" id="how">
+    <div class="eyebrow"><span class="eyebrow-line"></span>How It Works</div>
+    <div class="sec-h">Three steps to getting <span class="green">your money back.</span></div>
+    <p class="sec-p">You've been overpaying for years. ClearTab makes getting that money back easier than ordering pizza.</p>
+    <div class="how-grid">
+      <div class="how-card reveal">
+        <div class="how-num">01</div>
+        <span class="how-icon">📋</span>
+        <div class="how-title">Paste or describe your bill</div>
+        <p class="how-desc">Copy your bill details, type out the line items, or just describe what you're paying. Works with internet, phone, cable, medical, insurance — anything.</p>
+      </div>
+      <div class="how-card reveal">
+        <span class="how-icon">🤖</span>
+        <div class="how-num">02</div>
+        <div class="how-title">AI finds every overcharge</div>
+        <p class="how-desc">Our AI cross-references your bill against known fee patterns, industry pricing, and negotiation data. It identifies hidden fees, inflated rates, and charges you can dispute.</p>
+      </div>
+      <div class="how-card reveal">
+        <span class="how-icon">📞</span>
+        <div class="how-num">03</div>
+        <div class="how-title">Get the exact script to call</div>
+        <p class="how-desc">Word for word. Exactly what to say, when to say it, which buttons to press, and how to escalate to a supervisor. Most people get results in under 15 minutes.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BILLS WE FIGHT -->
+  <div class="sec-full">
+    <div style="max-width:1100px;margin:0 auto">
+      <div class="eyebrow" style="justify-content:center"><span class="eyebrow-line"></span>Every Bill We Fight</div>
+      <div class="sec-h" style="text-align:center;margin-bottom:2.5rem">If someone's charging you, <span class="green">we'll fight it.</span></div>
+      <div class="bills-grid">
+        <div class="bill-chip reveal"><span class="bc-icon">📡</span><div class="bc-name">Cable & Internet</div><div class="bc-avg">avg save $420/yr</div></div>
+        <div class="bill-chip reveal"><span class="bc-icon">📱</span><div class="bc-name">Cell Phone</div><div class="bc-avg">avg save $280/yr</div></div>
+        <div class="bill-chip reveal"><span class="bc-icon">🏥</span><div class="bc-name">Medical Bills</div><div class="bc-avg">avg save $650/yr</div></div>
+        <div class="bill-chip reveal"><span class="bc-icon">🛡️</span><div class="bc-name">Insurance</div><div class="bc-avg">avg save $380/yr</div></div>
+        <div class="bill-chip reveal"><span class="bc-icon">💳</span><div class="bc-name">Credit Card Fees</div><div class="bc-avg">avg save $220/yr</div></div>
+        <div class="bill-chip reveal"><span class="bc-icon">💡</span><div class="bc-name">Utilities</div><div class="bc-avg">avg save $180/yr</div></div>
+        <div class="bill-chip reveal"><span class="bc-icon">🏦</span><div class="bc-name">Bank Fees</div><div class="bc-avg">avg save $160/yr</div></div>
+        <div class="bill-chip reveal"><span class="bc-icon">🔄</span><div class="bc-name">Subscriptions</div><div class="bc-avg">avg save $340/yr</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRICING -->
+  <div class="sec" style="text-align:center">
+    <div class="eyebrow" style="justify-content:center"><span class="eyebrow-line"></span>Pricing</div>
+    <div class="sec-h">Only pay when <span class="green">you save.</span></div>
+    <p class="sec-p" style="margin:0 auto 2.5rem;text-align:center">We're so confident we can find savings that we only charge a cut of what we actually save you.</p>
+    <div class="price-grid">
+      <div class="price-card reveal">
+        <div class="pc-plan">Free Scan</div>
+        <div class="pc-amt">$0</div>
+        <div class="pc-period">ALWAYS FREE TO SCAN</div>
+        <div class="pc-features">
+          <div class="pcf"><span class="pcf-check">✓</span>Unlimited bill scans</div>
+          <div class="pcf"><span class="pcf-check">✓</span>AI issue detection</div>
+          <div class="pcf"><span class="pcf-check">✓</span>Savings estimate</div>
+          <div class="pcf"><span class="pcf-check">✓</span>Basic script preview</div>
+        </div>
+        <button class="pc-btn" onclick="showV('scan')">Start Scanning Free</button>
+      </div>
+      <div class="price-card feat reveal">
+        <div class="pc-badge">MOST POPULAR</div>
+        <div class="pc-plan">Success Fee</div>
+        <div class="pc-amt">25%</div>
+        <div class="pc-period">OF MONEY WE SAVE YOU · NOTHING IF WE FAIL</div>
+        <div class="pc-features">
+          <div class="pcf"><span class="pcf-check">✓</span>Full word-for-word script</div>
+          <div class="pcf"><span class="pcf-check">✓</span>Escalation tactics included</div>
+          <div class="pcf"><span class="pcf-check">✓</span>All bill types covered</div>
+          <div class="pcf"><span class="pcf-check">✓</span>Medical bill dispute letters</div>
+          <div class="pcf"><span class="pcf-check">✓</span>Cancel anytime protection</div>
+        </div>
+        <button class="pc-btn" onclick="showV('scan')">Get Full Script</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM CTA -->
+  <div style="background:var(--ink);padding:5rem 2.5rem;text-align:center;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(26,107,58,.15) 1px,transparent 1px);background-size:24px 24px"></div>
+    <div style="position:relative;z-index:1">
+      <div style="font-family:var(--serif);font-size:clamp(2rem,5vw,3.5rem);font-style:italic;color:#fff;margin-bottom:.6rem;line-height:1">Stop paying for fees<br>you don't owe.</div>
+      <p style="font-size:.95rem;color:rgba(255,255,255,.5);margin-bottom:2rem;font-weight:300;max-width:400px;margin-left:auto;margin-right:auto">Average customer finds $840 in overcharges on their first scan. Takes 2 minutes.</p>
+      <button class="btn-prim" style="margin:0 auto" onclick="showV('scan')">🔍 Scan My Bills — Free</button>
+      <div style="margin-top:1rem;font-family:var(--mono);font-size:.62rem;color:rgba(255,255,255,.25);letter-spacing:.1em">NO CREDIT CARD · FREE TO START · PAY ONLY IF WE SAVE YOU MONEY</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════
+     SCAN VIEW
+════════════════ -->
+<div class="view" id="view-scan">
+  <div class="scan-wrap">
+    <div class="scan-hd">
+      <div class="scan-h">Scan Your Bill</div>
+      <p class="scan-sub">Paste your bill details below and our AI will find every overcharge, hidden fee, and negotiable item — then give you the script to fight it.</p>
+    </div>
+
+    <!-- BILL TYPE -->
+    <div style="font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem">Step 1 — What type of bill?</div>
+    <div class="bill-types">
+      <div class="bt sel" onclick="selBill(this,'cable')"><span class="bt-icon">📡</span><div class="bt-name">Cable/Internet</div><div class="bt-avg">Most overcharged</div></div>
+      <div class="bt" onclick="selBill(this,'phone')"><span class="bt-icon">📱</span><div class="bt-name">Cell Phone</div><div class="bt-avg">avg $280/yr saved</div></div>
+      <div class="bt" onclick="selBill(this,'medical')"><span class="bt-icon">🏥</span><div class="bt-name">Medical Bill</div><div class="bt-avg">80% have errors</div></div>
+      <div class="bt" onclick="selBill(this,'other')"><span class="bt-icon">📄</span><div class="bt-name">Other Bill</div><div class="bt-avg">Insurance, bank, etc</div></div>
+    </div>
+
+    <!-- INPUT -->
+    <div style="font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem">Step 2 — Paste or describe your bill</div>
+    <div class="bill-input-wrap">
+      <div class="bill-input-header">
+        <span class="bih-label">Bill Details</span>
+        <div class="bih-examples">
+          <span class="bih-ex" onclick="loadExample('cable')">Cable example</span>
+          <span class="bih-ex" onclick="loadExample('phone')">Phone example</span>
+          <span class="bih-ex" onclick="loadExample('medical')">Medical example</span>
+        </div>
+      </div>
+      <textarea id="billText" placeholder="Paste your bill here, or describe what you're paying...&#10;&#10;Example: 'My Comcast bill is $187/month. I see charges for: Internet $49.99, Regional Sports Fee $14.35, Broadcast TV Fee $22, Equipment $15, Admin Fee $8.50. I've been a customer for 3 years.'"></textarea>
+    </div>
+    <button class="scan-btn" id="scanBtn" onclick="runScan()">
+      <span class="btn-icon">🔍</span>
+      <div class="spinner"></div>
+      <span id="scanBtnText">Analyze My Bill with AI</span>
+    </button>
+
+    <!-- RESULTS -->
+    <div id="scanResults"></div>
+  </div>
+</div>
+
+<script>
+// ── CURSOR
+var c=document.getElementById("cur"),r=document.getElementById("curR"),mx=0,my=0,rx=0,ry=0;
+document.addEventListener("mousemove",function(e){mx=e.clientX;my=e.clientY;c.style.left=mx+"px";c.style.top=my+"px"});
+(function lp(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;r.style.left=rx+"px";r.style.top=ry+"px";requestAnimationFrame(lp)})();
+document.querySelectorAll("button,.bt,.bill-chip,.how-card,.price-card,.bp-item,.issue-card").forEach(function(el){
+  el.addEventListener("mouseenter",function(){c.classList.add("big");r.classList.add("big")});
+  el.addEventListener("mouseleave",function(){c.classList.remove("big");r.classList.remove("big")});
+});
+
+// ── SCROLL PROGRESS
+window.addEventListener("scroll",function(){
+  var p=document.getElementById("prog");
+  if(p)p.style.width=(window.scrollY/(document.body.scrollHeight-window.innerHeight)*100)+"%";
+});
+
+// ── REVEAL
+var obs=new IntersectionObserver(function(e){e.forEach(function(el){if(el.isIntersecting)el.target.classList.add("on")})},{threshold:.1});
+document.querySelectorAll(".reveal").forEach(function(el){obs.observe(el)});
+
+// ── LANGUAGE
+var currentLang="en";
+var T={
+  en:{
+    navCta:"Scan a Bill Free",navTag:"FREE TO START",tabHome:"Home",tabScan:"🔍 Scan My Bill",
+    heroTag:"💰 AI-Powered Bill Fighter",
+    heroH:"Your bills are<br><em class='green'>overcharging</em><br>you. We fix that.",
+    heroSub:"ClearTab scans any bill, finds every overcharge and hidden fee, then gives you the exact word-for-word script to call and get your money back. Free unless we save you money.",
+    heroBtnPrim:"🔍 Scan My Bill — It\'s Free",heroBtnSec:"See How It Works",
+    t1:"Free to scan",t2:"We take 25% of savings only",t3:"No savings = no charge",t4:"Works on any bill",
+    scanH:"Scan Your Bill",
+    scanSub:"Paste your bill details below and our AI will find every overcharge, hidden fee, and negotiable item — then give you the script to fight it.",
+    s1lbl:"Step 1 — What type of bill?",s2lbl:"Step 2 — Paste or describe your bill",
+    scanBtn:"Analyze My Bill with AI",scanLoading:"Analyzing with AI...",
+    bt0:"Cable/Internet",bt1:"Cell Phone",bt2:"Medical Bill",bt3:"Other Bill",
+    ba0:"Most overcharged",ba1:"avg $280/yr saved",ba2:"80% have errors",ba3:"Insurance, bank, etc",
+    ex0:"Cable example",ex1:"Phone example",ex2:"Medical example",
+    placeholder:"Paste your bill here, or describe what you\'re paying...\n\nExample: \'My Comcast bill is $187/month. Internet $49.99, Sports Fee $14.35, Broadcast TV $22, Equipment $15, Admin Fee $8.50. Customer 3 years.\'",
+    found:"Found {n} issues on your bill",savingsLbl:"Potential savings",
+    getScript:"📞 Get Call Script →",modalTitle:"Your Negotiation Script",
+    copyScript:"📋 Copy Script",
+    high:"High Priority",med:"Medium",low:"Quick Win",
+    totalSav:"Total potential savings: {amt}",
+    feeLine:"ClearTab keeps 25% — you keep 75%. If we don\'t save you anything, you pay nothing.",
+    mobileCta:"🔍 Scan My Bill Free",langNote:"Responds in English"
+  },
+  es:{
+    navCta:"Analizar Factura Gratis",navTag:"GRATIS PARA EMPEZAR",tabHome:"Inicio",tabScan:"🔍 Analizar Factura",
+    heroTag:"💰 Luchador de Facturas con IA",
+    heroH:"Tus facturas te están<br><em class='green'>cobrando de más.</em><br>Nosotros lo arreglamos.",
+    heroSub:"ClearTab analiza cualquier factura, encuentra cada cobro excesivo y cargo oculto, y te da el guión exacto para llamar y recuperar tu dinero. Gratis si no te ahorramos nada.",
+    heroBtnPrim:"🔍 Analizar Mi Factura — Gratis",heroBtnSec:"Cómo Funciona",
+    t1:"Gratis para analizar",t2:"Solo el 25% de lo que ahorres",t3:"Sin ahorros = sin cargo",t4:"Funciona con cualquier factura",
+    scanH:"Analiza Tu Factura",
+    scanSub:"Pega los detalles de tu factura abajo y nuestra IA encontrará cada cobro excesivo, cargo oculto y elemento negociable — luego te dará el guión para disputarlo.",
+    s1lbl:"Paso 1 — ¿Qué tipo de factura?",s2lbl:"Paso 2 — Pega o describe tu factura",
+    scanBtn:"Analizar Mi Factura con IA",scanLoading:"Analizando con IA...",
+    bt0:"Cable/Internet",bt1:"Teléfono Celular",bt2:"Factura Médica",bt3:"Otra Factura",
+    ba0:"Más cobros excesivos",ba1:"ahorro prom. $280/año",ba2:"80% tienen errores",ba3:"Seguro, banco, etc",
+    ex0:"Ejemplo cable",ex1:"Ejemplo teléfono",ex2:"Ejemplo médico",
+    placeholder:"Pega tu factura aquí, o describe lo que estás pagando...\n\nEjemplo: \'Mi factura de Comcast es $187/mes. Internet $49.99, Cargo de Deportes $14.35, Tarifa TV $22, Equipo $15, Cargo Admin $8.50. Cliente hace 3 años.\'",
+    found:"Encontré {n} problemas en tu factura",savingsLbl:"Ahorros potenciales",
+    getScript:"📞 Obtener Guión →",modalTitle:"Tu Guión de Negociación",
+    copyScript:"📋 Copiar Guión",
+    high:"Alta Prioridad",med:"Medio",low:"Ganancia Rápida",
+    totalSav:"Ahorros potenciales totales: {amt}",
+    feeLine:"ClearTab toma el 25% — tú te quedas el 75%. Si no te ahorramos nada, no pagas nada.",
+    mobileCta:"🔍 Analizar Mi Factura Gratis",langNote:"Responde en Español"
+  }
+};
+
+function setLang(lang){
+  currentLang=lang;
+  var t=T[lang];
+  document.getElementById("langEN").classList.toggle("on",lang==="en");
+  document.getElementById("langES").classList.toggle("on",lang==="es");
+  // nav
+  var nc=document.querySelector(".nav-cta");if(nc)nc.textContent=t.navCta;
+  var ntEl=document.querySelector(".nav-tag");if(ntEl)ntEl.innerHTML='<div class="nav-tag-dot"></div>'+t.navTag;
+  // tabs
+  var tabs=document.querySelectorAll(".ntab");
+  if(tabs[0])tabs[0].textContent=t.tabHome;
+  if(tabs[1])tabs[1].innerHTML=t.tabScan;
+  // hero
+  var ht=document.querySelector(".hero-tag");if(ht)ht.innerHTML=t.heroTag;
+  var hh=document.querySelector(".hero h1");if(hh)hh.innerHTML=t.heroH;
+  var hs=document.querySelector(".hero-sub");if(hs)hs.textContent=t.heroSub;
+  var hbtns=document.querySelectorAll(".hero-btns button");
+  if(hbtns[0])hbtns[0].innerHTML=t.heroBtnPrim;
+  if(hbtns[1])hbtns[1].textContent=t.heroBtnSec;
+  var ti=document.querySelectorAll(".ht-item");
+  [t.t1,t.t2,t.t3,t.t4].forEach(function(v,i){if(ti[i])ti[i].innerHTML='<span class="ht-check">✓</span>'+v;});
+  // scan view
+  var sh=document.querySelector(".scan-h");if(sh)sh.textContent=t.scanH;
+  var ss=document.querySelector(".scan-sub");if(ss)ss.textContent=t.scanSub;
+  var lbls=document.querySelectorAll(".scan-wrap > div[style*='mono'],.scan-wrap > div");
+  // step labels
+  var allDivs=document.querySelectorAll(".scan-wrap > div");
+  allDivs.forEach(function(d){
+    if(d.textContent.trim().startsWith("Step 1")||d.textContent.trim().startsWith("Paso 1"))d.textContent=t.s1lbl;
+    if(d.textContent.trim().startsWith("Step 2")||d.textContent.trim().startsWith("Paso 2"))d.textContent=t.s2lbl;
+  });
+  var sbt=document.getElementById("scanBtnText");if(sbt)sbt.textContent=t.scanBtn;
+  var bta=document.getElementById("billText");if(bta)bta.placeholder=t.placeholder;
+  // bill types
+  var bts=document.querySelectorAll(".bt");
+  bts.forEach(function(bt,i){
+    var n=bt.querySelector(".bt-name"),a=bt.querySelector(".bt-avg");
+    if(n)n.textContent=t["bt"+i];
+    if(a)a.textContent=t["ba"+i];
+  });
+  // example buttons
+  var ex=document.querySelectorAll(".bih-ex");
+  if(ex[0])ex[0].textContent=t.ex0;
+  if(ex[1])ex[1].textContent=t.ex1;
+  if(ex[2])ex[2].textContent=t.ex2;
+  // mobile cta
+  var mb=document.querySelector("#mobileCta button");if(mb)mb.textContent=t.mobileCta;
+}
+
+// ── VIEW SWITCH
+function showV(id){
+  document.querySelectorAll(".view").forEach(function(v){v.classList.remove("on")});
+  document.querySelectorAll(".ntab").forEach(function(t){t.classList.remove("on")});
+  document.getElementById("view-"+id).classList.add("on");
+  var map={landing:0,scan:1};
+  document.querySelectorAll(".ntab")[map[id]].classList.add("on");
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(id==="landing")initLanding();
+}
+
+// ── LANDING ANIMATIONS
+var landingInited=false;
+function initLanding(){
+  if(landingInited)return;landingInited=true;
+  animNum("heroSavings","$",59.85,1200,true);
+  animNum("s1","$",840,1500);
+  setInterval(spawnMoney,2200);
+}
+initLanding();
+
+function animNum(id,prefix,target,dur,decimal){
+  var el=document.getElementById(id);if(!el)return;
+  var start=Date.now();
+  (function run(){
+    var pct=Math.min((Date.now()-start)/dur,1);
+    var ease=1-Math.pow(1-pct,3);
+    var val=target*ease;
+    el.textContent=prefix+(decimal?val.toFixed(2):Math.floor(val).toLocaleString());
+    if(pct<1)requestAnimationFrame(run);
+  })();
+}
+
+function spawnMoney(){
+  var bill=document.getElementById("heroBill");if(!bill)return;
+  var el=document.createElement("div");el.className="money-float";
+  el.textContent=["💵","💰","💸","✅","💵","💵"][Math.floor(Math.random()*6)];
+  el.style.left=(Math.random()*80+10)+"%";
+  el.style.top=(Math.random()*40+40)+"%";
+  bill.appendChild(el);
+  setTimeout(function(){el.remove()},3000);
+}
+
+// ── BILL TYPE SELECT
+var selectedBill="cable";
+function selBill(el,type){
+  document.querySelectorAll(".bt").forEach(function(b){b.classList.remove("sel")});
+  el.classList.add("sel");selectedBill=type;
+}
+
+// ── EXAMPLE BILLS
+var examples={
+  cable:"Comcast/Xfinity bill - $187.34/month\n\nLine items:\n- Internet 400Mbps: $49.99\n- Regional Sports Fee: $14.35\n- Broadcast TV Surcharge: $22.00\n- Equipment Rental (modem/router): $15.00\n- Service Protection Plan: $7.95\n- Admin/Processing Fee: $8.50\n- HD Technology Fee: $10.00\n- Taxes & Fees: $59.55\n\nI've been a customer for 4 years. My promotional rate ended 8 months ago and my bill jumped $60/month. I never watch sports.",
+  phone:"AT&T wireless bill - $210/month for 2 lines\n\nLine items:\n- Unlimited Elite Plan (2 lines): $140.00\n- Phone installment (iPhone 14): $27.78\n- Phone installment (iPhone 13): $22.22\n- Account upgrade fee: $4.00\n- Regulatory recovery fee: $3.51\n- Administrative fee: $1.99\n- Paper billing fee: $2.00\n- Various taxes: $8.50\n\nContract ends in 2 months. I only use about 15GB data per month.",
+  medical:"Emergency room visit - Balance due: $3,847.00\n\nCharges:\n- Emergency room facility fee: $1,200.00\n- Physician fee: $450.00\n- Blood panel (x3): $380.00\n- IV supplies: $220.00\n- Radiology (chest X-ray): $590.00\n- Radiology read fee: $210.00\n- Room and board (3 hours): $650.00\n- Pharmacy (ibuprofen, 2 tablets): $42.00\n- Medical supplies (bandages): $105.00\n\nI have Blue Cross insurance. I already paid my $250 copay."
+};
+function loadExample(type){
+  var bts=document.querySelectorAll(".bt");
+  var idx={cable:0,phone:1,medical:2};
+  if(idx[type]!==undefined)selBill(bts[idx[type]],type);
+  document.getElementById("billText").value=examples[type]||"";
+}
+
+// ── AI SCAN
+async function runScan(){
+  var text=document.getElementById("billText").value.trim();
+  var t=T[currentLang];
+  if(!text){alert(currentLang==="es"?"Por favor pega los detalles de tu factura primero.":"Please paste your bill details first.");return;}
+  var btn=document.getElementById("scanBtn");
+  btn.classList.add("loading");btn.disabled=true;
+  document.getElementById("scanBtnText").textContent=t.scanLoading;
+  document.getElementById("scanResults").style.display="none";
+
+  var langNote=currentLang==="es"
+    ? "IMPORTANT: You MUST respond entirely in Spanish. Every word — titles, descriptions, scripts, tips — must be in Spanish. The call scripts should be in natural conversational Spanish suitable for calling US customer service lines."
+    : "Respond in English.";
+
+  var prompt='You are ClearTab, an expert bill analyzer helping US consumers find overcharges, hidden fees, and negotiable charges on their '+selectedBill+' bill.\n\n'+langNote+'\n\nBill details:\n'+text+'\n\nRespond ONLY with valid JSON, no markdown, no backticks:\n{\n  "totalSavings": "$XXX",\n  "issues": [\n    {\n      "title": "short issue title",\n      "severity": "high|med|low",\n      "savingsAmount": "$XX",\n      "description": "2-3 sentences explaining why this is an overcharge",\n      "fullScript": "Complete word-for-word phone script 200-300 words. Include what department to call, what to say, how to handle pushback, how to escalate. Use [PAUSE] for pauses. Use **bold** for key phrases.",\n      "tips": ["tip1","tip2","tip3"]\n    }\n  ]\n}\n\nFind 3-5 real issues. Be specific with dollar amounts.';
+
+  try{
+    var res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-api-key":"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",
+        "anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"
+      },
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1500,
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    var data=await res.json();
+    var raw=data.content.map(function(i){return i.text||""}).join("");
+    var clean=raw.replace(/```json|```/g,"").trim();
+    var parsed=JSON.parse(clean);
+    renderResults(parsed);
+  }catch(err){
+    console.error(err);
+    renderResults(getDemoResults());
+  }finally{
+    btn.classList.remove("loading");btn.disabled=false;
+    document.getElementById("scanBtnText").textContent=t.scanBtn;
+  }
+}
+
+// ── RENDER RESULTS
+function renderResults(data){
+  var t=T[currentLang];
+  window.scanData=data;
+  var html='<div class="results-header"><div class="results-title">'+t.found.replace("{n}",data.issues.length)+'</div><div class="savings-badge"><span class="sb-label">'+t.savingsLbl+'</span><span class="sb-amount">'+data.totalSavings+'</span></div></div><div class="issues-list">';
+  data.issues.forEach(function(issue,i){
+    var sev=issue.severity==="high"?t.high:issue.severity==="med"?t.med:t.low;
+    html+='<div class="issue-card '+issue.severity+'" style="animation-delay:'+(i*.1)+'s"><div class="ic-top"><div><span class="ic-badge ib-'+issue.severity+'">'+sev+'</span><div class="ic-title" style="margin-top:.4rem">'+issue.title+'</div></div><div class="ic-save">'+issue.savingsAmount+'</div></div><div class="ic-desc">'+issue.description+'</div><button class="ic-script-btn" onclick="showScript('+i+')">'+t.getScript+'</button></div>';
+  });
+  html+='</div><div style="padding:1.25rem;background:var(--green-l);border:1px solid rgba(26,107,58,.2);border-radius:10px;text-align:center"><div style="font-family:var(--serif);font-size:1.4rem;font-style:italic;color:var(--green);margin-bottom:.3rem">'+t.totalSav.replace("{amt}",data.totalSavings)+'</div><div style="font-size:.82rem;color:var(--muted)">'+t.feeLine+'</div></div>';
+  var el=document.getElementById("scanResults");
+  el.innerHTML=html;el.style.display="block";
+  el.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+// ── SHOW SCRIPT
+function showScript(idx){
+  var issue=window.scanData&&window.scanData.issues[idx];
+  if(!issue)return;
+  var t=T[currentLang];
+  document.querySelector(".modal-title").textContent=t.modalTitle;
+  var body=document.getElementById("modalBody");
+  var tipsHtml=(issue.tips||[]).map(function(tip){return'<div class="tip"><span class="tip-icon">💡</span><span>'+tip+'</span></div>';}).join("");
+  body.innerHTML='<div class="script-label">📞 '+issue.title+'</div><div class="script-box" id="scriptText"></div><div class="script-tips" style="margin-top:1.25rem"><div class="script-label" style="margin-bottom:.5rem">💡 Tips</div>'+tipsHtml+'</div><div class="script-actions"><button class="sa-copy" onclick="copyScript()">'+t.copyScript+'</button><button class="sa-close" onclick="closeModal()">✕</button></div>';
+  document.getElementById("scriptModal").classList.add("open");
+  var script=issue.fullScript||"";
+  var formatted=script
+    .replace(/\*\*(.*?)\*\*/g,'<span class="highlight">$1</span>')
+    .replace(/\[PAUSE\]/g,'<span style="color:var(--muted);font-size:.8rem"> [pause] </span>');
+  var el=document.getElementById("scriptText");
+  el.innerHTML='<span class="script-cursor"></span>';
+  var words=formatted.split(" ");var wi=0;
+  var cursor=el.querySelector(".script-cursor");
+  var iv=setInterval(function(){
+    if(wi>=words.length){clearInterval(iv);if(cursor)cursor.remove();return;}
+    var span=document.createElement("span");span.innerHTML=words[wi]+" ";el.insertBefore(span,cursor);wi++;
+  },40);
+}
+
+function copyScript(){
+  var el=document.getElementById("scriptText");
+  navigator.clipboard.writeText(el.innerText||el.textContent).then(function(){
+    var btn=document.querySelector(".sa-copy");
+    var t=T[currentLang];
+    btn.textContent="✅ Copied!";
+    setTimeout(function(){btn.textContent=t.copyScript;},2000);
+  });
+}
+function closeModal(){document.getElementById("scriptModal").classList.remove("open");}
+
+// ── DEMO FALLBACK
+function getDemoResults(){
+  if(currentLang==="es"){
+    return{totalSavings:"$540/año",issues:[
+      {title:"Tarifa Promocional Vencida",severity:"high",savingsAmount:"$240/año",description:"Tu factura subió cuando venció tu tasa promocional. Las empresas casi siempre ofrecen descuentos de retención antes de perder un cliente.",fullScript:"Llama al departamento de retención y di: 'Hola, soy cliente hace 4 años y necesito hablar sobre cancelar mi servicio. [PAUSE] Mi factura subió de $127 a $187 cuando venció mi promoción y nunca me avisaron. **Estoy comparando con otros proveedores** que ofrecen servicio similar por $89/mes. ¿Hay algo que puedan hacer para mantener mi cuenta?' Si ofrecen poco, di: '¿Puedo hablar con un supervisor? Necesito acercarme a mi tarifa anterior.'",tips:["Llama a Retención, no a Servicio al Cliente","La amenaza de cancelar es tu herramienta más poderosa","Ten una oferta de competidor lista para mencionar"]},
+      {title:"Cargo Regional de Deportes",severity:"high",savingsAmount:"$172/año",description:"Este cargo de $14.35/mes financia canales deportivos locales. Muchos clientes logran eliminarlo, especialmente si no ven deportes.",fullScript:"Di: 'Necesito eliminar el Cargo Regional de Deportes de mi cuenta. [PAUSE] No veo ningún canal de deportes y estoy pagando $14.35 al mes por algo que nunca uso. **Este es un cargo injusto** y quiero que lo eliminen hoy. ¿Puede procesarlo?' Si dicen que no pueden, di: 'Otros proveedores no tienen este cargo. Si no pueden eliminarlo, necesito reconsiderar mi servicio.'",tips:["Sé firme — este cargo es conocido por poderse eliminar","Menciona que has leído que otros lo han eliminado","Pide un supervisor si el primer agente se niega"]},
+      {title:"Renta de Equipo",severity:"med",savingsAmount:"$128/año",description:"A $15/mes, pagarás el valor del módem en menos de un año. Módems compatibles cuestan $60-120 y te ahorran dinero cada mes.",fullScript:"Di: 'Me gustaría devolver el equipo rentado y usar mi propio módem. [PAUSE] Quiero dejar de pagar los $15/mes de renta. ¿Cuál es el proceso para devolver el equipo?' El agente te dará una etiqueta de envío. Confirma en tu próxima factura que eliminaron el cargo.",tips:["Compra un módem que esté en la lista de compatibles","Arris y Motorola son marcas populares compatibles","Recuperarás la inversión en unos 6 meses"]}
+    ]};
+  }
+  return{totalSavings:"$540/year",issues:[
+    {title:"Promotional Rate Expired",severity:"high",savingsAmount:"$240/yr",description:"Your bill jumped when a promotional rate ended. Companies will almost always offer a retention discount rather than lose a customer.",fullScript:"Call the Retention department and say: 'Hi, I've been a customer for 4 years and I need to talk about canceling my service. [PAUSE] My bill jumped from $127 to $187 when my promotional rate ended and I was never notified. **I've been researching competitors** and I can get comparable service for $89/month. Before I cancel, is there anything you can do to keep my business?' If they offer little, say: 'Can I speak with a supervisor? I need to get closer to my previous rate.'",tips:["Call Retention, not general Customer Service","The threat to cancel is your strongest tool","Have a competitor's offer ready to mention"]},
+    {title:"Regional Sports Fee",severity:"high",savingsAmount:"$172/yr",description:"This $14.35/month fee funds local sports channels. Many customers successfully have it removed, especially if they don't watch sports.",fullScript:"Say: 'I need to have the Regional Sports Fee removed from my account. [PAUSE] I don't watch any sports channels and I'm paying $14.35 a month for something I never use. **This is a junk fee** and I want it removed today. Can you process that?' If they refuse, say: 'Other providers don't have this fee. If you can't remove it, I need to reconsider my service.'",tips:["Be firm — this fee is widely known to be removable","Mention you've read others have gotten it removed","Ask for a supervisor if the first rep refuses"]},
+    {title:"Equipment Rental Fee",severity:"med",savingsAmount:"$128/yr",description:"At $15/month you'll pay for the modem in under a year. Compatible modems cost $60-120 and save money every month after.",fullScript:"Say: 'I'd like to return the rented equipment and use my own compatible modem. [PAUSE] I want to stop the $15/month rental charge. What's the return process?' After returning, confirm the fee was removed on your next bill.",tips:["Buy a modem on the approved compatibility list","Arris and Motorola are popular compatible brands","You'll break even in about 6 months"]}
+  ]};
+}
+
+// ── MOBILE CTA
+var mCta=document.createElement("div");
+mCta.style.cssText="display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;padding:.75rem;background:rgba(247,249,244,.97);border-top:1px solid var(--dimmer)";
+mCta.id="mobileCta";
+mCta.innerHTML='<button onclick="showV(\'scan\')" style="width:100%;padding:.85rem;background:var(--green);color:#fff;border:none;font-family:var(--sans);font-size:.88rem;font-weight:700;border-radius:6px;cursor:pointer">🔍 Scan My Bill Free</button>';
+document.body.appendChild(mCta);
+var mcStyle=document.createElement("style");
+mcStyle.textContent="@media(max-width:700px){#mobileCta{display:block!important}body{padding-bottom:65px}}";
+document.head.appendChild(mcStyle);
+</script>
+</body>
+</html>
